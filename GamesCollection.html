@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎮 Игровая коллекция</title>
+<style>
+  :root{
+    --bg:#0e1014; --panel:#161a22; --card:#1a1f28;
+    --border:#272d3a; --text:#e9ecf3; --muted:#8791a7;
+    --accent:#7c5cff; --gold:#f5b942;
+    --green:#22c55e; --red:#ef4444; --yellow:#f59e0b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    background:
+      radial-gradient(1000px 600px at 50% -20%, #232a44 0%, transparent 65%),
+      var(--bg);
+    color:var(--text); min-height:100vh;
+    padding:28px 16px 80px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto}
+
+  .hero{
+    position:relative;
+    background:linear-gradient(135deg, rgba(124,92,255,.10), rgba(74,168,255,.04));
+    border:1px solid var(--border);
+    border-radius:22px;
+    padding:24px;
+    margin-bottom:22px;
+    overflow:hidden;
+    box-shadow:0 30px 60px -40px rgba(124,92,255,.5);
+  }
+  .hero::before{
+    content:'';position:absolute;inset:0;
+    background:
+      radial-gradient(520px 200px at 15% 0%, rgba(124,92,255,.22), transparent 60%),
+      radial-gradient(500px 220px at 90% 100%, rgba(74,168,255,.15), transparent 60%);
+    pointer-events:none;
+  }
+  .hero::after{
+    content:'';position:absolute;inset:0;
+    background-image:radial-gradient(rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size:14px 14px;opacity:.6;pointer-events:none;
+    mask-image:linear-gradient(180deg, #000 0%, transparent 85%);
+  }
+  .hero-inner{
+    position:relative;z-index:1;
+    display:flex;flex-wrap:wrap;gap:18px;
+    align-items:center;justify-content:space-between;
+  }
+  .hero-left{display:flex;align-items:center;gap:16px}
+  .logo{
+    width:56px;height:56px;flex:0 0 56px;
+    border-radius:16px;display:grid;place-items:center;
+    font-size:28px;
+    background:linear-gradient(135deg,var(--accent),#4aa8ff);
+    box-shadow:0 12px 30px -10px var(--accent);
+  }
+  h1{font-size:27px;letter-spacing:-.6px;line-height:1.12}
+  .tagline{font-size:13px;color:var(--muted);margin-top:4px}
+
+  .hero-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+  .sync-pill{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:5px 11px;border-radius:999px;
+    background:rgba(11,14,19,.75);
+    border:1px solid var(--border);
+    font-size:11px;font-weight:700;letter-spacing:.3px;
+    color:var(--muted);
+    transition:.25s;
+  }
+  .sync-pill .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--muted);
+    transition:.25s;
+  }
+  .sync-pill.ok { color:#b7f5cd; border-color:rgba(34,197,94,.4); }
+  .sync-pill.ok .dot{ background:var(--green); box-shadow:0 0 8px var(--green); }
+  .sync-pill.saving { color:#ffe0a3; border-color:rgba(245,185,66,.4); }
+  .sync-pill.saving .dot{ background:var(--yellow); box-shadow:0 0 8px var(--yellow); animation:pulse 1s infinite; }
+  .sync-pill.err { color:#ffc4c4; border-color:rgba(239,68,68,.4); }
+  .sync-pill.err .dot{ background:var(--red); box-shadow:0 0 8px var(--red); }
+  @keyframes pulse{50%{opacity:.35}}
+
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
+    gap:10px;margin-top:20px;
+    position:relative;z-index:1;
+  }
+  .stat-card{
+    background:rgba(11,14,19,.65);
+    border:1px solid var(--border);
+    border-radius:13px;
+    padding:12px 14px;
+    display:flex;flex-direction:column;gap:2px;
+    backdrop-filter:blur(6px);
+    transition:.2s;
+  }
+  .stat-card:hover{
+    transform:translateY(-2px);
+    border-color:#3a4356;
+    box-shadow:0 12px 26px -18px rgba(124,92,255,.6);
+  }
+  .stat-card b{
+    font-size:23px;font-weight:800;color:#fff;
+    letter-spacing:-.6px;line-height:1.1;
+  }
+  .stat-card span{
+    font-size:11px;color:var(--muted);
+    font-weight:700;letter-spacing:.5px;
+    text-transform:uppercase;
+  }
+
+  .notice{
+    display:none;
+    background:linear-gradient(135deg, rgba(245,185,66,.14), rgba(239,68,68,.08));
+    border:1px solid rgba(245,185,66,.35);
+    color:#ffe6b7;
+    padding:12px 16px;border-radius:12px;
+    font-size:13px;font-weight:600;
+    margin-bottom:16px;
+    text-align:center;line-height:1.5;
+  }
+
+  .btn{
+    font:inherit;font-size:14px;font-weight:600;
+    background:var(--panel);color:var(--text);
+    border:1px solid var(--border);border-radius:10px;
+    padding:9px 14px;cursor:pointer;
+    transition:.15s;display:inline-flex;align-items:center;gap:7px;
+    text-decoration:none;
+  }
+  .btn:hover{border-color:#3d4658;background:#1d2330;transform:translateY(-1px)}
+  .btn.primary{
+    background:linear-gradient(135deg,var(--accent),#5b8cff);
+    border-color:transparent;color:#fff;
+    box-shadow:0 8px 22px -10px var(--accent);
+  }
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn.ghost{background:transparent}
+  .btn.gold{
+    background:linear-gradient(135deg,#f5b942,#e8952b);
+    border-color:transparent;color:#241a02;
+    box-shadow:0 8px 22px -10px #f5b942;
+  }
+  .btn.gold:hover{filter:brightness(1.06)}
+
+  .panel{
+    background:var(--panel);border:1px solid var(--border);border-radius:16px;
+    padding:20px;margin-bottom:22px;
+    display:none;
+  }
+  .panel.open{display:block;animation:slide .2s ease}
+  @keyframes slide{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+  .panel h2{font-size:16px;margin-bottom:16px;color:var(--muted);font-weight:600}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+  label{display:flex;flex-direction:column;gap:7px;font-size:13px;color:var(--muted);font-weight:600}
+  input,select,textarea{
+    font:inherit;font-size:14px;font-weight:400;
+    background:#0f131a;color:var(--text);
+    border:1px solid var(--border);border-radius:10px;
+    padding:10px 12px;outline:none;transition:.15s;width:100%;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,92,255,.15)}
+  textarea{resize:vertical;font-family:inherit}
+  .full{grid-column:1/-1}
+
+  .stars{display:flex;gap:4px;font-size:24px;line-height:1;color:#3a4152;cursor:pointer;user-select:none;padding-top:2px}
+  .stars span{transition:.12s}
+  .stars span.on{color:var(--gold);text-shadow:0 0 12px rgba(245,185,66,.5)}
+  .stars span:hover{transform:scale(1.15)}
+
+  .dual{display:flex;gap:6px;align-items:center}
+  .dual input{text-align:center}
+  .dual .sep{color:var(--muted);font-weight:700;font-size:13px;flex:0 0 auto}
+
+  .cover-row{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+  .cover-row .field{flex:1;min-width:220px}
+  .cover-preview{
+    width:130px;height:110px;flex:0 0 130px;border-radius:11px;overflow:hidden;
+    background:#0b0e13;border:1px dashed var(--border);
+    display:grid;place-items:center;position:relative;
+  }
+  .cover-preview img{width:100%;height:100%;object-fit:contain;display:block}
+  .cover-preview .ph{font-size:32px;color:#4a5468}
+  .cover-buttons{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .cover-buttons .btn{padding:6px 10px;font-size:12px}
+
+  .form-actions{display:flex;gap:10px;margin-top:18px}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+  .tabs{display:flex;flex-wrap:wrap;gap:7px;flex:1}
+  .tab{
+    font:inherit;font-size:13px;font-weight:600;
+    background:var(--panel);border:1px solid var(--border);
+    color:var(--muted);border-radius:999px;padding:7px 14px;
+    cursor:pointer;transition:.15s;display:inline-flex;gap:7px;align-items:center;
+  }
+  .tab:hover{color:var(--text);border-color:#3d4658}
+  .tab.active{background:var(--accent);border-color:transparent;color:#fff}
+  .tab b{font-weight:700;opacity:.65;font-size:12px}
+  .search{max-width:230px}
+  .sort{max-width:170px}
+
+  .acc-bar{
+    display:flex;flex-wrap:wrap;gap:7px;align-items:center;
+    margin-bottom:18px;padding:10px 12px;
+    background:var(--panel);border:1px solid var(--border);border-radius:12px;
+  }
+  .acc-bar .lbl{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.3px;margin-right:2px}
+  .acc-bar .acc-tab{
+    font:inherit;font-size:13px;font-weight:600;
+    background:#0f131a;border:1px solid var(--border);
+    color:var(--muted);border-radius:8px;padding:5px 12px;
+    cursor:pointer;transition:.15s;display:inline-flex;gap:6px;align-items:center;
+  }
+  .acc-bar .acc-tab:hover{color:var(--text);border-color:#3d4658}
+  .acc-bar .acc-tab.active{background:var(--accent);border-color:transparent;color:#fff}
+  .acc-bar .acc-tab b{font-weight:700;opacity:.65;font-size:11px}
+  .acc-bar .acc-tab.tag-none{font-style:italic;opacity:.75}
+
+  .grid-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  .card{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:14px;display:flex;flex-direction:column;gap:12px;position:relative;
+    transition:.18s;overflow:hidden;
+  }
+  .card:hover{border-color:#3a4356;transform:translateY(-2px);box-shadow:0 14px 34px -20px #000}
+  .card::before{
+    content:'';position:absolute;left:0;top:0;right:0;height:4px;
+    background:var(--c,#444);opacity:.9;
+  }
+
+  .cover{
+    width:100%;height:150px;flex:0 0 auto;border-radius:11px;overflow:hidden;
+    position:relative;background:#080a0e;display:grid;place-items:center;
+    box-shadow:0 8px 22px -12px #000;
+  }
+  .cover img{width:100%;height:100%;object-fit:contain;display:block}
+  .cover .ph{
+    display:none;width:100%;height:100%;place-items:center;
+    font-size:44px;font-weight:800;color:#fff;
+    background:linear-gradient(135deg,#2f3a55,#1c2333);
+  }
+  .cover.noimg .ph{display:grid}
+  .cover.noimg img{display:none}
+
+  .acc-tag{
+    position:absolute;top:8px;left:8px;
+    padding:3px 9px;border-radius:8px;
+    background:rgba(0,0,0,.75);color:#fff;
+    font-size:13px;font-weight:700;line-height:1.2;
+    backdrop-filter:blur(6px);
+    border:1px solid rgba(255,255,255,.18);
+    max-width:90px;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;
+    box-shadow:0 4px 12px -4px rgba(0,0,0,.6);
+  }
+
+  .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:9px}
+  .info h3{font-size:18px;font-weight:700;line-height:1.25;word-break:break-word}
+  .meta{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .badge{
+    font-size:12px;font-weight:700;padding:4px 11px;border-radius:999px;
+    background:color-mix(in srgb, var(--c) 18%, transparent);
+    color:var(--c);white-space:nowrap;
+  }
+  .rate{color:var(--gold);font-size:15px;letter-spacing:2px}
+  .rate .off{color:#3a4152}
+  .stat{
+    font-size:13px;color:#c7cee0;background:#0f131a;
+    border:1px solid var(--border);border-radius:8px;
+    padding:3px 10px;display:inline-flex;align-items:center;gap:5px;
+  }
+  .stat b{font-weight:700;color:#fff}
+  .stat .of{color:var(--muted);font-weight:500}
+  .notes{
+    font-size:13px;color:#9aa3b8;line-height:1.5;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .card-tools{
+    position:absolute;top:22px;right:22px;display:flex;gap:5px;
+    opacity:0;transition:.15s;
+  }
+  .card:hover .card-tools{opacity:1}
+  .icon-btn{
+    width:30px;height:30px;border-radius:9px;border:1px solid var(--border);
+    background:rgba(18,22,30,.85);color:var(--muted);cursor:pointer;font-size:14px;
+    display:grid;place-items:center;transition:.15s;padding:0;line-height:1;
+    backdrop-filter:blur(4px);
+  }
+  .icon-btn:hover{color:var(--text);border-color:#4a5468}
+  .icon-btn.del:hover{color:#ff6b6b;border-color:#7a2b2b}
+
+  .empty{
+    grid-column:1/-1;text-align:center;padding:70px 20px;color:var(--muted);
+    border:2px dashed var(--border);border-radius:16px;
+  }
+  .empty .big{font-size:46px;margin-bottom:14px;opacity:.55}
+  .empty p{font-size:14px;line-height:1.6}
+
+  .modal-overlay{
+    position:fixed;inset:0;
+    background:rgba(8,10,14,.82);
+    backdrop-filter:blur(8px);
+    display:none;place-items:center;
+    z-index:100;padding:20px;
+    overflow-y:auto;
+  }
+  .modal-overlay.open{display:grid;animation:fadeIn .2s ease}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+  .modal{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:26px;
+    max-width:500px;width:100%;
+    max-height:90vh;overflow-y:auto;
+    box-shadow:0 40px 80px -30px rgba(0,0,0,.7);
+    animation:modalIn .25s ease;
+    position:relative;
+  }
+  @keyframes modalIn{
+    from{opacity:0;transform:translateY(14px) scale(.98)}
+    to{opacity:1;transform:none}
+  }
+  .modal h2{font-size:20px;font-weight:800;letter-spacing:-.4px;margin-bottom:8px}
+  .modal .sub{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:20px}
+  .modal .field{margin-bottom:14px}
+  .modal .field label{margin-bottom:6px}
+  .modal .actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+  .modal .actions .btn{flex:1;justify-content:center;min-width:120px}
+  .modal-close{
+    position:absolute;top:14px;right:14px;
+    width:32px;height:32px;border-radius:10px;
+    border:1px solid var(--border);background:#12161e;color:var(--muted);
+    cursor:pointer;font-size:16px;line-height:1;
+    display:grid;place-items:center;transition:.15s;
+  }
+  .modal-close:hover{color:var(--text);border-color:#4a5468}
+
+  .error-msg{
+    color:#ff8b8b;font-size:12.5px;font-weight:600;
+    margin-top:-6px;margin-bottom:12px;display:none;
+  }
+  .error-msg.show{display:block}
+
+  @media (max-width:520px){
+    h1{font-size:22px}
+    .logo{width:48px;height:48px;flex:0 0 48px;font-size:23px}
+    .search,.sort{max-width:100%;flex:1}
+    .cover{height:130px}
+    .hero{padding:18px}
+    .modal{padding:22px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="logo">🎮</div>
+        <div>
+          <h1 id="heroTitle">Игровая коллекция</h1>
+          <p class="tagline" id="heroTagline">Пройденные, начатые и желанные игры</p>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <span class="sync-pill" id="syncPill"><span class="dot"></span><span id="syncText">Загрузка…</span></span>
+        <a class="btn gold" id="btnSteam" href="#" target="_blank" rel="noopener" style="display:none">🎁 Вишлист Steam</a>
+        <button class="btn" id="btnOwner" title="Войти как владелец">🔒</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card"><b id="stat-games">0</b><span>игр</span></div>
+      <div class="stat-card"><b id="stat-hours">0</b><span>часов</span></div>
+      <div class="stat-card"><b id="stat-ach">0</b><span>достижений</span></div>
+      <div class="stat-card"><b id="stat-completed">0</b><span>пройдено</span></div>
+    </div>
+  </header>
+
+  <div class="notice" id="notice"></div>
+
+  <section class="panel" id="panel">
+    <h2 id="panelTitle">Новая игра</h2>
+    <form id="gameForm">
+      <div class="grid">
+        <label>Название *
+          <input id="f-title" required placeholder="Hollow Knight" autocomplete="off">
+        </label>
+        <label>Платформа
+          <input id="f-platform" list="platforms" placeholder="PC / PS5 / Switch" autocomplete="off">
+          <datalist id="platforms">
+            <option>PC</option><option>PlayStation 5</option><option>PlayStation 4</option>
+            <option>Xbox Series X|S</option><option>Nintendo Switch</option>
+            <option>Мобильные</option><option>Эмулятор</option>
+          </datalist>
+        </label>
+        <label>Метка аккаунта
+          <input id="f-account" maxlength="8" placeholder="Свой значок (🅰 / 1 / ★)" autocomplete="off">
+        </label>
+        <label>Статус
+          <select id="f-status"></select>
+        </label>
+        <label>Оценка
+          <div class="stars" id="stars">
+            <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span>
+            <span data-v="4">★</span><span data-v="5">★</span>
+          </div>
+        </label>
+        <label>Время в игре
+          <div class="dual">
+            <input id="f-hours" type="number" min="0" step="1" placeholder="0">
+            <span class="sep">ч</span>
+            <input id="f-minutes" type="number" min="0" step="1" placeholder="0">
+            <span class="sep">мин</span>
+          </div>
+        </label>
+        <label>Достижения (получено / всего)
+          <div class="dual">
+            <input id="f-achievements" type="number" min="0" step="1" placeholder="0">
+            <span class="sep">/</span>
+            <input id="f-achievements-total" type="number" min="0" step="1" placeholder="0">
+          </div>
+        </label>
+
+        <div class="full">
+          <label>Обложка</label>
+          <div class="cover-row">
+            <div class="cover-preview" id="coverPreview"><span class="ph">🖼️</span></div>
+            <div class="field">
+              <input id="f-cover" placeholder="https://cdn.cloudflare.steamstatic.com/..." autocomplete="off">
+              <div class="cover-buttons">
+                <button type="button" class="btn" id="btnUploadCover">📁 Загрузить с компьютера</button>
+                <button type="button" class="btn ghost" id="btnClearCover">Убрать</button>
+              </div>
+              <input type="file" id="fileCover" accept="image/*" hidden>
+            </div>
+          </div>
+        </div>
+
+        <label class="full">Заметка
+          <textarea id="f-notes" rows="2" placeholder="Впечатления, прогресс, что осталось..."></textarea>
+        </label>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn primary" id="btnSave">Сохранить</button>
+        <button type="button" class="btn ghost" id="btnCancel">Отмена</button>
+      </div>
+    </form>
+  </section>
+
+  <div class="toolbar">
+    <div class="tabs" id="tabs"></div>
+    <input class="search" id="search" placeholder="🔍 Поиск..." autocomplete="off">
+    <select class="sort" id="sort">
+      <option value="added">Сначала новые</option>
+      <option value="title">По названию</option>
+      <option value="rating">По оценке</option>
+      <option value="hours">По времени</option>
+    </select>
+  </div>
+
+  <div class="acc-bar" id="accBar" style="display:none"></div>
+
+  <div class="grid-games" id="grid"></div>
+</div>
+
+<!-- ============ МОДАЛКА: ВЛАДЕЛЕЦ ============ -->
+<div class="modal-overlay" id="ownerModal">
+  <div class="modal">
+    <button class="modal-close" data-close="ownerModal">✕</button>
+    <h2>🔑 Вход владельца</h2>
+    <p class="sub">
+      Введи пароль, чтобы редактировать коллекцию. Друзьям пароль не нужен —
+      они увидят игры в режиме только чтения.
+    </p>
+
+    <div class="field">
+      <label>Пароль владельца</label>
+      <input id="in-password" type="password" placeholder="Твой пароль" autocomplete="off">
+    </div>
+    <div class="error-msg" id="ownerError"></div>
+
+    <div class="actions">
+      <button class="btn ghost" data-close="ownerModal">Отмена</button>
+      <button class="btn primary" id="btnOwnerSubmit">Войти</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ МОДАЛКА: НАСТРОЙКИ ============ -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <button class="modal-close" data-close="settingsModal">✕</button>
+    <h2>⚙️ Настройки владельца</h2>
+    <p class="sub">Ссылка на вишлист появится золотой кнопкой в шапке сайта.</p>
+
+    <div class="field">
+      <label>Ссылка на приватный вишлист Steam</label>
+      <input id="in-steam" type="url" placeholder="https://steamcommunity.com/id/.../wishlist/">
+    </div>
+
+    <div class="error-msg" id="settingsError"></div>
+
+    <div class="actions">
+      <button class="btn ghost" id="btnLogout">🚪 Выйти</button>
+      <button class="btn primary" id="btnSettingsSave">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   НАСТРОЙКИ — ЗАМЕНИ ЗНАЧЕНИЯ НИЖЕ НА СВОИ
+   ============================================================ */
+const API_URL  = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnSYy0cW0jihMJQoiYEAwRTBqj_ij5Njxht3865_RXbLuepn5ole_Sa9F7FO3M3SbGw55CjPeYXLqWe4LkxjB8xO4p_jnOgUfNeA3YJrSsYS0bQdTiM1MnhIV3GF2GXGWd0wYMbRgecY0PlL56Hwm09w4LyHkM5vg6sSOxeUUkSMT9zrrWXuXL8DkncbZ_4Gf2_uz_KeTxNaaL6mL4MtvRbhbL5NoNnHhn2crvf02yszO1LKiZeqI-HgZ7Sbmt1dSF1EaZcssD9DccmaLEx7jw_cCvgksQ&lib=M0xg3DwgERspOcfpXxL2_DlV5rJybEyUb";  // URL из Google Apps Script
+const PASSWORD = "VjbBuhs1";                  // Такой же, как в Apps Script
+/* ============================================================ */
+
+const STATUSES = {
+  playing:   { name: 'Прохожу',     color: '#3b82f6' },
+  completed: { name: 'Пройдено',    color: '#22c55e' },
+  dropped:   { name: 'Брошено',     color: '#ef4444' },
+  postponed: { name: 'Отложено',    color: '#64748b' },
+  planned:   { name: 'В планах',    color: '#a855f7' },
+  wishlist:  { name: 'Хочу купить', color: '#f59e0b' }
+};
+
+const SESSION_KEY = 'gt_owner_unlocked';
+const LOCAL_KEY   = 'myGamesCollection';
+
+const isConfigured = API_URL !== "PASTE_YOUR_WEB_APP_URL_HERE";
+
+let isOwner = false;
+let games = [];
+let steamGiftUrl = '';
+
+let filter = 'all';
+let accountFilter = 'all';
+let editingId = null;
+let ratingValue = 0;
+let coverData = '';
+
+/* ================== ХЕЛПЕРЫ ================== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+const totalMinutes = g => Math.round((g.hours || 0) * 60) + (g.minutes || 0);
+
+function fmtTime(g) {
+  const total = totalMinutes(g);
+  if (total <= 0) return '';
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  if (h === 0) return `${m} мин`;
+  if (m === 0) return `${h} ч`;
+  return `${h} ч ${m} мин`;
+}
+
+function setSync(state, text) {
+  const pill = $('syncPill');
+  pill.classList.remove('ok','saving','err');
+  if (state) pill.classList.add(state);
+  $('syncText').textContent = text;
+}
+
+function showNotice(html) {
+  const n = $('notice');
+  if (!html) { n.style.display = 'none'; return; }
+  n.innerHTML = html;
+  n.style.display = 'block';
+}
+
+/* ================== ОБЛАКО ================== */
+async function cloudLoad() {
+  if (!isConfigured) return null;
+  try {
+    const url = API_URL + '?t=' + Date.now(); // обход кэша
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if (json.status !== 'ok') throw new Error(json.message || 'bad response');
+    return {
+      games: Array.isArray(json.data) ? json.data : [],
+      steamGiftUrl: json.steamGiftUrl || ''
+    };
+  } catch(e) {
+    console.error('Ошибка загрузки:', e);
+    return null;
+  }
+}
+
+async function cloudSave() {
+  if (!isOwner || !isConfigured) return;
+  setSync('saving', 'Сохранение…');
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      // text/plain — чтобы не было CORS-префлайта
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ password: PASSWORD, games, steamGiftUrl })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if (json.status !== 'ok') throw new Error(json.message);
+    setSync('ok', 'Синхронизировано');
+  } catch(e) {
+    console.error('Ошибка сохранения:', e);
+    setSync('err', 'Ошибка синхронизации');
+  }
+}
+
+/* ================== ИНИЦИАЛИЗАЦИЯ ================== */
+$('f-status').innerHTML = Object.entries(STATUSES)
+  .map(([k, v]) => `<option value="${k}">${v.name}</option>`).join('');
+
+function applyOwnerUI() {
+  $('btnOwner').textContent = isOwner ? '⚙️' : '🔒';
+  $('btnOwner').title = isOwner ? 'Настройки владельца' : 'Войти как владелец';
+  document.querySelectorAll('#grid .card-tools').forEach(t => {
+    t.style.display = isOwner ? '' : 'none';
+  });
+}
+
+function updateSteamBtn() {
+  const btn = $('btnSteam');
+  if (steamGiftUrl && steamGiftUrl.trim()) {
+    btn.href = steamGiftUrl.trim();
+    btn.style.display = '';
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+/* ================== ОТРИСОВКА ================== */
+function buildTabs() {
+  const counts = { all: games.length };
+  Object.keys(STATUSES).forEach(k => counts[k] = games.filter(g => g.status === k).length);
+
+  let html = `<button class="tab ${filter === 'all' ? 'active' : ''}" data-f="all">
+      Все <b>${counts.all}</b></button>`;
+
+  for (const [k, v] of Object.entries(STATUSES)) {
+    html += `<button class="tab ${filter === k ? 'active' : ''}" data-f="${k}">
+      ${v.name} <b>${counts[k]}</b></button>`;
+  }
+  $('tabs').innerHTML = html;
+}
+
+function buildAccountBar() {
+  const tags = [...new Set(
+    games.map(g => (g.accountTag || '').trim()).filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b, 'ru'));
+
+  const bar = $('accBar');
+  if (tags.length === 0) {
+    bar.style.display = 'none';
+    bar.innerHTML = '';
+    if (accountFilter !== 'all') accountFilter = 'all';
+    return;
+  }
+
+  bar.style.display = 'flex';
+  const countAll  = games.length;
+  const countNone = games.filter(g => !(g.accountTag || '').trim()).length;
+
+  let html = `<span class="lbl">АККАУНТ:</span>
+    <button class="acc-tab ${accountFilter === 'all' ? 'active' : ''}" data-acc="all">
+      Все <b>${countAll}</b></button>`;
+
+  tags.forEach(t => {
+    const cnt = games.filter(g => (g.accountTag || '').trim() === t).length;
+    const active = accountFilter === t ? 'active' : '';
+    html += `<button class="acc-tab ${active}" data-acc="${esc(t)}">
+      ${esc(t)} <b>${cnt}</b></button>`;
+  });
+
+  if (countNone > 0) {
+    const active = accountFilter === 'none' ? 'active' : '';
+    html += `<button class="acc-tab tag-none ${active}" data-acc="none">
+      Без метки <b>${countNone}</b></button>`;
+  }
+
+  bar.innerHTML = html;
+}
+
+function updateStats() {
+  const totalMin = games.reduce((s, g) => s + totalMinutes(g), 0);
+  const totalHours = Math.round(totalMin / 60);
+  const totalAch = games.reduce((s, g) => s + (g.achievements || 0), 0);
+  const completed = games.filter(g => g.status === 'completed').length;
+
+  $('stat-games').textContent     = games.length;
+  $('stat-hours').textContent     = totalHours.toLocaleString('ru-RU');
+  $('stat-ach').textContent       = totalAch.toLocaleString('ru-RU');
+  $('stat-completed').textContent = completed;
+}
+
+function cardHTML(g) {
+  const st = STATUSES[g.status] || STATUSES.planned;
+  const r = g.rating || 0;
+
+  const tag = g.accountTag
+    ? `<span class="acc-tag" title="Метка аккаунта">${esc(g.accountTag)}</span>` : '';
+
+  const cover = `
+    <div class="cover${g.cover ? '' : ' noimg'}">
+      ${g.cover ? `<img src="${esc(g.cover)}" alt="" onerror="this.parentNode.classList.add('noimg')">` : ''}
+      <div class="ph">${esc((g.title[0] || '?').toUpperCase())}</div>
+      ${tag}
+    </div>`;
+
+  const stars = r
+    ? `<span class="rate">${'★'.repeat(r)}<span class="off">${'☆'.repeat(5 - r)}</span></span>`
+    : '';
+
+  const timeStr = fmtTime(g);
+  const time = timeStr
+    ? `<span class="stat" title="Время в игре">🕒 ${timeStr}</span>` : '';
+
+  let ach = '';
+  const got = g.achievements || 0;
+  const tot = g.achievementsTotal || 0;
+  if (got > 0 || tot > 0) {
+    if (tot > 0) {
+      ach = `<span class="stat" title="Получено достижений из общего количества">
+        🏆 <b>${got}</b><span class="of">/${tot}</span></span>`;
+    } else {
+      ach = `<span class="stat" title="Получено достижений">🏆 <b>${got}</b></span>`;
+    }
+  }
+
+  return `
+  <article class="card" style="--c:${st.color}">
+    ${cover}
+    <div class="info">
+      <h3>${esc(g.title)}</h3>
+      <div class="meta">
+        <span class="badge" style="--c:${st.color}">${st.name}</span>
+        ${g.platform ? `<span>${esc(g.platform)}</span>` : ''}
+        ${stars}
+      </div>
+      <div class="meta">
+        ${time}
+        ${ach}
+      </div>
+      ${g.notes ? `<div class="notes">${esc(g.notes)}</div>` : ''}
+    </div>
+    <div class="card-tools" style="${isOwner ? '' : 'display:none'}">
+      <button class="icon-btn" data-act="edit" data-id="${g.id}" title="Редактировать">✎</button>
+      <button class="icon-btn del" data-act="del" data-id="${g.id}" title="Удалить">✕</button>
+    </div>
+  </article>`;
+}
+
+function render() {
+  buildTabs();
+  buildAccountBar();
+  updateStats();
+  updateSteamBtn();
+
+  const q = $('search').value.trim().toLowerCase();
+  let list = games.filter(g => filter === 'all' || g.status === filter);
+
+  if (accountFilter === 'none') {
+    list = list.filter(g => !(g.accountTag || '').trim());
+  } else if (accountFilter !== 'all') {
+    list = list.filter(g => (g.accountTag || '').trim() === accountFilter);
+  }
+
+  if (q) {
+    list = list.filter(g =>
+      (g.title + ' ' + (g.platform || '') + ' ' + (g.notes || '') + ' ' + (g.accountTag || ''))
+        .toLowerCase().includes(q));
+  }
+
+  const s = $('sort').value;
+  if (s === 'title') list.sort((a, b) => a.title.localeCompare(b.title, 'ru'));
+  else if (s === 'rating') list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  else if (s === 'hours') list.sort((a, b) => totalMinutes(b) - totalMinutes(a));
+  else list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+  $('grid').innerHTML = list.length
+    ? list.map(cardHTML).join('')
+    : `<div class="empty">
+         <div class="big">${games.length ? '🔍' : '🕹️'}</div>
+         <p>${games.length
+            ? 'Ничего не найдено. Попробуй изменить фильтр или запрос.'
+            : (isOwner ? 'Коллекция пуста. Нажми «+ Добавить игру», чтобы начать!' : 'Коллекция пока пуста.')}</p>
+       </div>`;
+}
+
+/* ================== ФОРМА ================== */
+function openPanel(edit = false) {
+  if (!isOwner) return;
+  $('panel').classList.add('open');
+  $('panelTitle').textContent = edit ? 'Редактирование' : 'Новая игра';
+  $('btnSave').textContent = edit ? 'Обновить' : 'Сохранить';
+}
+
+function closePanel() {
+  $('panel').classList.remove('open');
+  editingId = null;
+  $('gameForm').reset();
+  setRating(0);
+  setCover('');
+}
+
+function setRating(v) {
+  ratingValue = v;
+  document.querySelectorAll('#stars span').forEach(s => {
+    s.classList.toggle('on', Number(s.dataset.v) <= v);
+  });
+}
+
+function setCover(src) {
+  coverData = src || '';
+  $('f-cover').value = (src && !src.startsWith('data:')) ? src : '';
+  updateCoverPreview();
+}
+
+function updateCoverPreview() {
+  const box = $('coverPreview');
+  if (coverData) {
+    box.innerHTML = `<img src="${esc(coverData)}" alt="" onerror="this.parentNode.innerHTML='<span class=&quot;ph&quot;>🖼️</span>'">`;
+  } else {
+    box.innerHTML = `<span class="ph">🖼️</span>`;
+  }
+}
+
+$('f-cover').addEventListener('input', e => {
+  coverData = e.target.value.trim();
+  updateCoverPreview();
+});
+
+$('btnUploadCover').addEventListener('click', () => $('fileCover').click());
+$('fileCover').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 1.5 * 1024 * 1024) {
+    if (!confirm('Картинка больше 1.5 МБ. Она может занять много места. Продолжить?')) {
+      e.target.value = '';
+      return;
+    }
+  }
+  const reader = new FileReader();
+  reader.onload = () => { coverData = reader.result; updateCoverPreview(); };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+$('btnClearCover').addEventListener('click', () => setCover(''));
+
+document.querySelectorAll('#stars span').forEach(s => {
+  s.addEventListener('click', () => {
+    const v = Number(s.dataset.v);
+    setRating(v === ratingValue ? 0 : v);
+  });
+});
+
+$('btnCancel').addEventListener('click', closePanel);
+
+$('gameForm').addEventListener('submit', e => {
+  e.preventDefault();
+  if (!isOwner) return;
+
+  let h = parseInt($('f-hours').value, 10);
+  let m = parseInt($('f-minutes').value, 10);
+  if (isNaN(h)) h = 0;
+  if (isNaN(m)) m = 0;
+  h = Math.max(0, h); m = Math.max(0, m);
+  h += Math.floor(m / 60); m = m % 60;
+
+  const achVal = parseInt($('f-achievements').value, 10);
+  const achTotalVal = parseInt($('f-achievements-total').value, 10);
+
+  const data = {
+    title: $('f-title').value.trim(),
+    platform: $('f-platform').value.trim(),
+    accountTag: $('f-account').value.trim(),
+    status: $('f-status').value,
+    rating: ratingValue,
+    hours: h,
+    minutes: m,
+    achievements: isNaN(achVal) ? 0 : Math.max(0, achVal),
+    achievementsTotal: isNaN(achTotalVal) ? 0 : Math.max(0, achTotalVal),
+    cover: coverData,
+    notes: $('f-notes').value.trim()
+  };
+  if (!data.title) return;
+
+  if (editingId) {
+    const g = games.find(x => x.id === editingId);
+    if (g) Object.assign(g, data);
+  } else {
+    games.unshift({ id: uid(), createdAt: Date.now(), ...data });
+  }
+
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(games)); } catch(e) {}
+  closePanel();
+  render();
+  cloudSave();
+});
+
+/* ================== ДЕЙСТВИЯ С КАРТОЧКАМИ ================== */
+$('grid').addEventListener('click', e => {
+  if (!isOwner) return;
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+
+  if (btn.dataset.act === 'del') {
+    if (confirm('Удалить игру из коллекции?')) {
+      games = games.filter(g => g.id !== id);
+      try { localStorage.setItem(LOCAL_KEY, JSON.stringify(games)); } catch(e) {}
+      render();
+      cloudSave();
+    }
+  }
+
+  if (btn.dataset.act === 'edit') {
+    const g = games.find(x => x.id === id);
+    if (!g) return;
+    editingId = id;
+
+    const total = totalMinutes(g);
+    const hh = Math.floor(total / 60);
+    const mm = total % 60;
+
+    $('f-title').value = g.title || '';
+    $('f-platform').value = g.platform || '';
+    $('f-account').value = g.accountTag || '';
+    $('f-status').value = g.status || 'planned';
+    $('f-hours').value = hh > 0 ? hh : '';
+    $('f-minutes').value = mm > 0 ? mm : '';
+    $('f-achievements').value = g.achievements || '';
+    $('f-achievements-total').value = g.achievementsTotal || '';
+    $('f-notes').value = g.notes || '';
+    setRating(g.rating || 0);
+    setCover(g.cover || '');
+    openPanel(true);
+    $('panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+});
+
+/* ================== ФИЛЬТРЫ ================== */
+$('tabs').addEventListener('click', e => {
+  const t = e.target.closest('.tab');
+  if (!t) return;
+  filter = t.dataset.f;
+  render();
+});
+
+$('accBar').addEventListener('click', e => {
+  const t = e.target.closest('.acc-tab');
+  if (!t) return;
+  accountFilter = t.dataset.acc;
+  render();
+});
+
+$('search').addEventListener('input', render);
+$('sort').addEventListener('change', render);
+
+/* ================== МОДАЛКИ ================== */
+function openModal(id) { $(id).classList.add('open'); }
+function closeModal(id) { $(id).classList.remove('open'); }
+
+document.querySelectorAll('[data-close]').forEach(b => {
+  b.addEventListener('click', () => closeModal(b.dataset.close));
+});
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+/* ================== ВЛАДЕЛЕЦ ================== */
+$('btnOwner').addEventListener('click', () => {
+  if (isOwner) {
+    $('in-steam').value = steamGiftUrl || '';
+    $('settingsError').classList.remove('show');
+    openModal('settingsModal');
+  } else {
+    $('in-password').value = '';
+    $('ownerError').classList.remove('show');
+    openModal('ownerModal');
+  }
+});
+
+$('btnOwnerSubmit').addEventListener('click', () => {
+  const err = $('ownerError');
+  const pwd = $('in-password').value;
+  if (!pwd) {
+    err.textContent = 'Введи пароль';
+    err.classList.add('show');
+    return;
+  }
+  if (pwd !== PASSWORD) {
+    err.textContent = 'Неверный пароль';
+    err.classList.add('show');
+    return;
+  }
+  isOwner = true;
+  sessionStorage.setItem(SESSION_KEY, '1');
+  applyOwnerUI();
+  render();
+  closeModal('ownerModal');
+  showNotice('');
+});
+
+$('btnSettingsSave').addEventListener('click', async () => {
+  steamGiftUrl = $('in-steam').value.trim();
+  render();
+  await cloudSave();
+  closeModal('settingsModal');
+});
+
+$('btnLogout').addEventListener('click', () => {
+  if (!confirm('Выйти из режима владельца на этом устройстве?')) return;
+  isOwner = false;
+  sessionStorage.removeItem(SESSION_KEY);
+  closeModal('settingsModal');
+  applyOwnerUI();
+  render();
+  setSync('', 'Только чтение');
+});
+
+/* ================== СТАРТ ================== */
+async function init() {
+  updateCoverPreview();
+
+  if (!isConfigured) {
+    setSync('err', 'Не настроено');
+    showNotice(
+      '⚠️ <b>Сайт ещё не настроен.</b><br>' +
+      'Владельцу нужно открыть HTML-файл в текстовом редакторе ' +
+      'и заменить строки <code>API_URL</code> и <code>PASSWORD</code> ' +
+      'в самом верху скрипта на реальные значения из Google Apps Script.'
+    );
+    applyOwnerUI();
+    render();
+    return;
+  }
+
+  // Восстанавливаем сессию владельца
+  if (sessionStorage.getItem(SESSION_KEY) === '1') {
+    isOwner = true;
+  }
+
+  setSync('saving', 'Загрузка…');
+  const cloud = await cloudLoad();
+
+  if (cloud) {
+    games = cloud.games;
+    steamGiftUrl = cloud.steamGiftUrl || '';
+    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(games)); } catch(e) {}
+    setSync('ok', 'Синхронизировано');
+  } else {
+    try { games = JSON.parse(localStorage.getItem(LOCAL_KEY)) || []; } catch(e) { games = []; }
+    setSync('err', 'Облако недоступно');
+  }
+
+  if (!isOwner) {
+    showNotice('👀 Ты в режиме просмотра. Нажми на 🔒, чтобы войти как владелец.');
+  }
+
+  applyOwnerUI();
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
